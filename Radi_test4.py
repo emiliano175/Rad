@@ -6,6 +6,9 @@ from sklearn.model_selection import train_test_split
 from fpdf import FPDF
 from datetime import datetime
 
+# --- Set Page Configuration ---
+st.set_page_config(page_title="RadiRecover", page_icon="🧬")
+
 # --- Simulate Patient Data ---
 def simulate_data(n=500):
     np.random.seed(42)
@@ -65,66 +68,67 @@ def generate_pdf(name, age, gender, treatment_site, comorbidities, fatigue_risk,
 
     return pdf.output(dest='S').encode('latin1')
 
-# --- App UI ---
-st.set_page_config(page_title="RadiRecover", page_icon="🧬")
+# --- UI Components ---
 st.title("🧬 RadiRecover: Personalized Radiotherapy Recovery Assistant")
 st.markdown("Your AI-powered side effect tracker for post-radiotherapy care.")
 
+# Patient Profile Section
 st.header("👤 Patient Profile")
-
 name = st.text_input("Name")
 age = st.slider("Age", 18, 90)
 gender = st.selectbox("Gender", ["Female", "Male", "Other"])
 treatment_site = st.selectbox("Radiation Treatment Site", ["Breast", "Head & Neck", "Pelvis", "Lung", "Prostate"])
 comorbidities = st.multiselect("Comorbidities", ["Diabetes", "Hypertension", "Asthma", "None"])
 
-# --- Predict Fatigue ---
+# Simulate fatigue prediction based on the selected inputs
 def predict_risk():
-    gender_map = {"Female": 0, "Male": 1, "Other": 2}
-    site_map = {"Breast": 0, "Head & Neck": 1, "Pelvis": 2, "Lung": 3, "Prostate": 4}
+    # Dummy logic for fatigue risk prediction
+    risk = {
+        "Breast": 80,
+        "Head & Neck": 70,
+        "Pelvis": 85,
+        "Lung": 60,
+        "Prostate": 50
+    }
+    return risk.get(treatment_site, 50)
 
-    gender_val = gender_map[gender]
-    site_val = site_map[treatment_site]
+if st.button("🧠 Generate Predicted Side Effects"):
+    st.subheader("🔮 Predicted Side Effects")
 
-    diabetes = 1 if "Diabetes" in comorbidities else 0
-    hypertension = 1 if "Hypertension" in comorbidities else 0
-    asthma = 1 if "Asthma" in comorbidities else 0
-
-    X = np.array([[age, gender_val, site_val, diabetes, hypertension, asthma]])
-    prob = model.predict_proba(X)[0][1]
-    return int(prob * 100)
-
-if st.button("🧠 Predict Side Effect Risk"):
-    risk = predict_risk()
-    st.subheader("🔮 Predicted Risk for Fatigue")
-    if risk >= 75:
-        st.error(f"⚠️ High Risk of Fatigue ({risk}%)")
-    elif risk >= 40:
-        st.warning(f"⚠️ Medium Risk of Fatigue ({risk}%)")
+    if treatment_site == "Breast":
+        st.markdown("- **Fatigue** – High Risk (85%)")
+        st.markdown("- **Skin Irritation** – Medium Risk (60%)")
+        st.markdown("- **Nausea** – Low Risk (25%)")
+    elif treatment_site == "Head & Neck":
+        st.markdown("- **Mouth Sores** – High Risk (75%)")
+        st.markdown("- **Dry Mouth** – Medium Risk (50%)")
+    elif treatment_site == "Pelvis":
+        st.markdown("- **Diarrhea** – Medium Risk (60%)")
+        st.markdown("- **Fatigue** – High Risk (80%)")
     else:
-        st.success(f"✅ Low Risk of Fatigue ({risk}%)")
+        st.markdown("No prediction rules for this site yet.")
 
-# --- Daily Check-In ---
+# Daily Symptom Tracker Section
 st.header("📅 Daily Symptom Tracker")
 symptom_today = st.radio("How are you feeling today?", ["Great", "Tired", "Very Tired", "In Pain", "Nauseous"])
 skin_status = st.radio("Any skin issues?", ["None", "Redness", "Peeling", "Blistering"])
 mood = st.slider("Mood Level (0 = low, 10 = high)", 0, 10, 5)
 
 if st.button("📤 Submit Today's Check-In"):
-    st.success("✔️ Your check-in has been submitted.")
+    st.success("✔️ Your check-in has been submitted. Thank you!")
     if symptom_today in ["Very Tired", "In Pain"]:
-        st.warning("⚠️ Please consider contacting your care team.")
+        st.warning("⚠️ Alert: You're reporting serious symptoms. Please consider contacting your care team.")
 
-# --- PDF Report Button ---
+# Generate PDF Report Section
 if st.button("📤 Generate PDF Report"):
-    risk = predict_risk()
+    fatigue_risk = predict_risk()
     pdf_bytes = generate_pdf(
         name=name,
         age=age,
         gender=gender,
         treatment_site=treatment_site,
         comorbidities=comorbidities,
-        fatigue_risk=risk,
+        fatigue_risk=fatigue_risk,
         symptoms=symptom_today,
         skin=skin_status,
         mood=mood,
@@ -136,12 +140,3 @@ if st.button("📤 Generate PDF Report"):
         file_name=f"{name}_radi_recovery_report.pdf",
         mime="application/pdf"
     )
-
-# --- Self-Care Tip ---
-st.header("💡 Self-Care Tip of the Day")
-if treatment_site == "Breast":
-    st.info("🛁 Keep your skin moisturized, avoid tight clothing, and stay hydrated.")
-elif treatment_site == "Head & Neck":
-    st.info("🍵 Use a soft toothbrush, stay hydrated, and rinse mouth with baking soda water.")
-else:
-    st.info("🧘 Gentle movement, rest when needed, and track your hydration daily.")
