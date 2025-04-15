@@ -4,4 +4,4 @@ pandas
 numpy
 joblib
 shap
-fpdf
+fpdf==1.7.2
