@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from fpdf import FPDF
+from datetime import datetime
 
 # --- Simulate Patient Data ---
 def simulate_data(n=500):
@@ -44,6 +46,25 @@ def train_model():
 
 model = train_model()
 
+# --- PDF Generation ---
+def generate_pdf(name, age, gender, treatment_site, comorbidities, fatigue_risk, symptoms, skin, mood):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    pdf.cell(200, 10, txt="RadiRecover Report", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.cell(200, 10, txt=f"Name: {name}", ln=True)
+    pdf.cell(200, 10, txt=f"Age: {age}    Gender: {gender}", ln=True)
+    pdf.cell(200, 10, txt=f"Treatment Site: {treatment_site}", ln=True)
+    pdf.cell(200, 10, txt=f"Comorbidities: {', '.join(comorbidities) if comorbidities else 'None'}", ln=True)
+    pdf.cell(200, 10, txt=f"Predicted Fatigue Risk: {fatigue_risk}%", ln=True)
+    pdf.cell(200, 10, txt=f"Daily Check-In: {symptoms}, Skin: {skin}, Mood: {mood}/10", ln=True)
+    pdf.cell(200, 10, txt=f"Report Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
+
+    return pdf.output(dest='S').encode('latin1')
+
 # --- App UI ---
 st.set_page_config(page_title="RadiRecover", page_icon="🧬")
 st.title("🧬 RadiRecover: Personalized Radiotherapy Recovery Assistant")
@@ -82,26 +103,6 @@ if st.button("🧠 Predict Side Effect Risk"):
         st.warning(f"⚠️ Medium Risk of Fatigue ({risk}%)")
     else:
         st.success(f"✅ Low Risk of Fatigue ({risk}%)")
-from fpdf import FPDF
-from datetime import datetime
-
-def generate_pdf(name, age, gender, treatment_site, comorbidities, fatigue_risk, symptoms, skin, mood):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-
-    pdf.cell(200, 10, txt="RadiRecover Report", ln=True, align='C')
-    pdf.ln(10)
-
-    pdf.cell(200, 10, txt=f"Name: {name}", ln=True)
-    pdf.cell(200, 10, txt=f"Age: {age}    Gender: {gender}", ln=True)
-    pdf.cell(200, 10, txt=f"Treatment Site: {treatment_site}", ln=True)
-    pdf.cell(200, 10, txt=f"Comorbidities: {', '.join(comorbidities) if comorbidities else 'None'}", ln=True)
-    pdf.cell(200, 10, txt=f"Predicted Fatigue Risk: {fatigue_risk}%", ln=True)
-    pdf.cell(200, 10, txt=f"Daily Check-In: {symptoms}, Skin: {skin}, Mood: {mood}/10", ln=True)
-    pdf.cell(200, 10, txt=f"Report Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
-
-    return pdf.output(dest='S').encode('latin1')
 
 # --- Daily Check-In ---
 st.header("📅 Daily Symptom Tracker")
@@ -113,6 +114,8 @@ if st.button("📤 Submit Today's Check-In"):
     st.success("✔️ Your check-in has been submitted.")
     if symptom_today in ["Very Tired", "In Pain"]:
         st.warning("⚠️ Please consider contacting your care team.")
+
+# --- PDF Report Button ---
 if st.button("📤 Generate PDF Report"):
     risk = predict_risk()
     pdf_bytes = generate_pdf(
