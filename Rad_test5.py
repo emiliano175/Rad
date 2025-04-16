@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+# Set config
+st.set_page_config(page_title="RadiRecover", page_icon="🧬")
+
 # Load model and encoders
 @st.cache_resource
 def load_model():
@@ -10,9 +13,6 @@ def load_model():
     return model, encoders
 
 model, encoders = load_model()
-
-# Set config
-st.set_page_config(page_title="RadiRecover", page_icon="🧬")
 
 # --- UI ---
 st.title("🧬 RadiRecover: Personalized Radiotherapy Recovery Assistant")
